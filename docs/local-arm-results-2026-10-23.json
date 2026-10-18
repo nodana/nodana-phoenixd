@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-23",
+  "platform": "linux-arm64",
+  "builder": "local Docker Desktop on ARM; disposable Nix container",
+  "nodanaVersion": "0.1.0",
+  "phoenixdVersionOutput": "phoenixd version 0.9.3-66420de",
+  "relocationSmokeTest": "passed in a fresh Alpine ARM container with networking disabled",
+  "walletStarted": false,
+  "signedPayloadVerification": "passed with a disposable Ed25519 test key",
+  "installedPayloadChecksums": "passed",
+  "payloadFiles": 14,
+  "bundleBytes": 14191575,
+  "packagingTestsPassed": 17,
+  "terraformReleaseStorageMockTestsPassed": 2,
+  "terraformStagingMockTestsPassed": 2,
+  "dockerCleanup": "verified no containers, images or build cache remain",
+  "releaseApprovedForDeployment": false,
+  "sourceSha256": {
+    "wrapper.c": "7a1adf5e714131475d35f5d35247f5ab3289d553d67b9265531851ddfe372bc1",
+    "build.nix": "fd54ba1377adcfd66608bc225bc3c68a80787b885c7313672528458d7d717fd7",
+    "bundle.nix": "304f1df2a21036ef19f6bd937448ac9a12e4a87e2f1cef47603ef8cf14870367",
+    "phoenixd.nix": "860252949fb842bdc2b69e990b5165683a47cda3ced8e0b80c1a1a8a198e900a",
+    "release.json": "8f0c9d40c650e08aee79672f333cecc5334dfc036af742377f508a4afaa5d3dc"
+  },
+  "limits": [
+    "Version checks and verified staging do not prove wallet migration or node update recovery.",
+    "Controller/API update integration and app/CLI/SDK runtime-release approval are not implemented yet.",
+    "No AWS resources were created, no artifacts uploaded, and no AMI built or deployed."
+  ]
+}

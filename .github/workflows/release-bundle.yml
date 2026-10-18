@@ -1,0 +1,54 @@
+name: Release node bundle
+on:
+  push:
+    tags: ['bundle-v*']
+permissions:
+  contents: read
+concurrency:
+  group: bundle-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  release:
+    environment: bundle-release
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --manifest-path tools/Cargo.toml --locked
+      - run: cargo build --manifest-path tools/Cargo.toml --release --locked
+      - name: Check bundle tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          tools/target/release/ndn-bundle check-tag --tag "$RELEASE_TAG"
+      - name: Build and smoke-test ARM bundle
+        run: tools/target/release/ndn-bundle build --docker-context default --output "$RUNNER_TEMP/bundle-build"
+      - name: Sign and verify release
+        env:
+          SIGNING_KEY: ${{ secrets.BUNDLE_SIGNING_PRIVATE_KEY_PEM }}
+          TRUSTED_PUBLIC_KEY: ${{ vars.BUNDLE_SIGNING_PUBLIC_KEY_PEM }}
+        run: |
+          tools/target/release/ndn-bundle pack --payload "$RUNNER_TEMP/bundle-build/payload" \
+            --private-key-env SIGNING_KEY --public-key-env TRUSTED_PUBLIC_KEY \
+            --output "$RUNNER_TEMP/bundle-release"
+      - name: Attest public release artifacts
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            ${{ runner.temp }}/bundle-release/bundle.tar.gz
+            ${{ runner.temp }}/bundle-release/release.json
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release create "$RELEASE_TAG" "$RUNNER_TEMP/bundle-release/"* \
+            --verify-tag --title "$RELEASE_TAG" \
+            --notes 'Signed ARM64 node bundle. release-sha256.txt identifies the canonical manifest; SHA256SUMS identifies downloadable files. Build provenance is available through GitHub artifact attestations.'
