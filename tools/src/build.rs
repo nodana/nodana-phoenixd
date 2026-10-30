@@ -206,7 +206,13 @@ pub fn build(source: &Path, output: &Path, context: &str) -> Result<()> {
     for name in ["build.nix", "bundle.nix", "phoenixd.nix", "release.json"] {
         fs::copy(source.join(name), staging.path().join(name))?;
     }
-    for name in ["Cargo.toml", "Cargo.lock", "src/main.rs"] {
+    for name in [
+        "Cargo.toml",
+        "Cargo.lock",
+        "build.rs",
+        "src/main.rs",
+        "src/trust.rs",
+    ] {
         let target = staging.path().join("launcher").join(name);
         fs::create_dir_all(target.parent().unwrap())?;
         fs::copy(source.join("launcher").join(name), target)?;

@@ -7,6 +7,9 @@ let
     src = ./launcher;
     cargoLock.lockFile = ./launcher/Cargo.lock;
     NODANA_RELEASE = releaseVersion;
+    # TEMPORARY compatibility for existing hosts. Remove with launcher trust.rs
+    # after the conditions in docs/development.md have been verified.
+    NODANA_CA_BUNDLE = "${pkgs.cacert}/etc/ssl/certs/ca-no-trust-rules-bundle.crt";
   };
 in pkgs.runCommand "nodana-phoenixd-${releaseVersion}" {
   nativeBuildInputs = [ pkgs.patchelf pkgs.pax-utils ];

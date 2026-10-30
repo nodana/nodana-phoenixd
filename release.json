@@ -1,6 +1,10 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.1",
   "phoenixdVersion": "0.9.3",
   "stateFormat": "phoenixd-0.9.3",
-  "upgradeFrom": []
+  "upgradeFrom": [{
+    "version": "0.1.0",
+    "releaseSha256": "a4a0855395db9b0996b8fa8eb7ad95ebbd40a21f675281ac73c5038162b21e29",
+    "stateFormat": "phoenixd-0.9.3"
+  }]
 }

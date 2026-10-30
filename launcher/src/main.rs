@@ -1,6 +1,9 @@
 use std::os::unix::process::CommandExt;
 use std::{path::Path, process::Command};
 
+#[cfg(target_os = "linux")]
+mod trust;
+
 fn command(root: &Path, args: impl Iterator<Item = std::ffi::OsString>) -> Command {
     let mut command = Command::new(root.join("lib/ld.so"));
     command
@@ -26,6 +29,22 @@ fn main() {
             .parent()
             .and_then(Path::parent)
             .ok_or_else(|| std::io::Error::other("missing bundle root"))?;
+        #[cfg(target_os = "linux")]
+        {
+            use std::os::fd::AsRawFd;
+            // TEMPORARY: existing hosts lack the required system CA layout.
+            // Removal conditions and all related files are documented in development.md.
+            let roots = trust::bundle(include_bytes!(concat!(env!("OUT_DIR"), "/ca-bundle.pem")))?;
+            let mut child = command(root, args.into_iter());
+            child.env(
+                "SSL_CERT_FILE",
+                format!("/proc/self/fd/{}", roots.as_raw_fd()),
+            );
+            child.env_remove("SSL_CERT_DIR");
+            child.env_remove("CURL_CA_BUNDLE");
+            Err(child.exec())
+        }
+        #[cfg(not(target_os = "linux"))]
         Err(command(root, args.into_iter()).exec())
     })();
     if result.is_err() {

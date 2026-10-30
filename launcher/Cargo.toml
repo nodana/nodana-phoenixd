@@ -3,6 +3,9 @@ name = "nodana-phoenixd"
 version = "0.1.0"
 edition = "2024"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"
+
 [profile.release]
 strip = true
 panic = "abort"

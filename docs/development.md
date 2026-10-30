@@ -31,6 +31,39 @@ through. The host controller supplies mainnet flags, per-node ports and the
 persistent wallet directory. `--nodana-version` prints the bundle version;
 `--version` prints the included Phoenixd version without starting a wallet.
 
+## Temporary CA compatibility
+
+This is a temporary bridge for existing hosts whose system trust store uses
+OpenSSL `TRUSTED CERTIFICATE` blocks or lacks `/etc/ssl/cert.pem`. It allows a
+per-node runtime update without changing or restarting the shared host. Future
+host images carry the system CA fix independently.
+
+The Linux launcher embeds the standard PEM CA bundle from the pinned Nix package
+and sets `SSL_CERT_FILE` to a sealed anonymous file retained across exec. It clears
+inherited CA directory and curl-bundle overrides. This provides runtime-owned
+trust roots without writing to the host or wallet filesystem; updating those
+roots requires a new bundle release. The certificate bytes are covered by the
+signed launcher's checksum, preserving the existing ELF-only bundle contract.
+Release builds require `NODANA_CA_BUNDLE` at compile time. For standalone Linux
+launcher development, set it to a standard PEM CA bundle before `cargo build`.
+
+Remove this workaround only after every affected host has been fixed or retired,
+and Phoenixd HTTPS has been verified using the system trust store with no
+`SSL_CERT_FILE` override. Completing a trial on one node is not sufficient.
+In particular, an empty `swift` can stop requiring this bridge once it has been
+retired from new placements. Nodes on a second EC2 built with the corrected host
+image do not depend on this bridge. Do not remove it while any node still runs
+on an affected host, or while that host can receive new placements.
+
+For removal, delete `launcher/src/trust.rs` and `launcher/build.rs`, remove the
+launcher setup of the embedded CA file and CA environment overrides, remove the
+Linux `libc` dependency and regenerate its lockfile, remove `NODANA_CA_BUNDLE`
+from `bundle.nix`, and remove the deleted files from `tools/src/build.rs`'s source
+allowlist. Keep loader hardening, argument forwarding, wallet recovery and
+release verification coverage. Build and test a new release; do not alter
+already published bundles or their manifests. Keep this section until removal
+has been verified on a representative host.
+
 ## Sign and verify
 
 Install Rust and OpenSSL 3, including its development libraries. On macOS, put
